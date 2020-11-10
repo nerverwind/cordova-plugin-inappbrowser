@@ -38,11 +38,13 @@
 #define    LOCATIONBAR_HEIGHT 21.0
 #define    FOOTER_HEIGHT ((TOOLBAR_HEIGHT) + (LOCATIONBAR_HEIGHT))
 
+
 #pragma mark CDVWKInAppBrowser
 
 @interface CDVWKInAppBrowser () {
     NSInteger _previousStatusBarStyle;
 }
+
 @end
 
 @implementation CDVWKInAppBrowser
@@ -787,7 +789,7 @@ BOOL isExiting = FALSE;
     self.webView.multipleTouchEnabled = YES;
     self.webView.opaque = YES;
     self.webView.userInteractionEnabled = YES;
-    self.automaticallyAdjustsScrollViewInsets = YES ;
+    self.webView.scrollView.contentInsetAdjustmentBehavior = YES;
     [self.webView setAutoresizingMask:UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth];
     self.webView.allowsLinkPreview = NO;
     self.webView.allowsBackForwardNavigationGestures = NO;
@@ -813,13 +815,35 @@ BOOL isExiting = FALSE;
     self.spinner.userInteractionEnabled = NO;
     [self.spinner stopAnimating];
     
-    self.closeButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(close)];
+    
+    UIButton *closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    UIImage * closeImage = [UIImage imageNamed:@ "close.png"];
+    [closeButton setImage:closeImage forState:UIControlStateNormal];
+    [closeButton addTarget:self action:@selector(close) forControlEvents:UIControlEventTouchUpInside];
+    [closeButton.widthAnchor constraintEqualToConstant:34].active = YES;
+    [closeButton.heightAnchor constraintEqualToConstant:26].active = YES;
+    [closeButton setImageEdgeInsets: UIEdgeInsetsMake(6, 10, 6, 10)];
+    [closeButton.layer setBorderWidth:0.6];
+    closeButton.layer.borderColor = [UIColor colorWithRed:157.0/255.0 green:157.0/255.0 blue:157.0/255.0 alpha:1.0].CGColor;
+    [closeButton.layer setCornerRadius:12.0];
+    closeButton.layer.maskedCorners = kCALayerMaxXMinYCorner | kCALayerMaxXMaxYCorner;
+    
+    self.closeButton = [[UIBarButtonItem alloc] initWithCustomView:closeButton];
     self.closeButton.enabled = YES;
     
-    UIBarButtonItem* flexibleSpaceButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
-    UIBarButtonItem* fixedSpaceButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
-    fixedSpaceButton.width = 20;
+    UIButton *moreButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    UIImage * moreImage = [UIImage imageNamed:@ "more.png"];
+    [moreButton setImage:moreImage forState:UIControlStateNormal];
+    [moreButton addTarget:self action:@selector(close) forControlEvents:UIControlEventTouchUpInside];
+    [moreButton.widthAnchor constraintEqualToConstant:34].active = YES;
+    [moreButton.heightAnchor constraintEqualToConstant:26].active = YES;
+    [moreButton setImageEdgeInsets: UIEdgeInsetsMake(6, 10, 6, 10)];
+    [moreButton.layer setBorderWidth:0.6];
+    [moreButton.layer setCornerRadius:12.0];
+    moreButton.layer.borderColor = [UIColor colorWithRed:157.0/255.0 green:157.0/255.0 blue:157.0/255.0 alpha:1.0].CGColor;
+    moreButton.layer.maskedCorners = kCALayerMinXMinYCorner | kCALayerMinXMaxYCorner;
+    self.moreButton = [[UIBarButtonItem alloc] initWithCustomView:moreButton];
+    self.moreButton.enabled = YES;
     
     float toolbarY = toolbarIsAtBottom ? self.view.bounds.size.height - TOOLBAR_HEIGHT : 0.0;
     CGRect toolbarFrame = CGRectMake(0.0, toolbarY, self.view.bounds.size.width, TOOLBAR_HEIGHT);
@@ -842,6 +866,19 @@ BOOL isExiting = FALSE;
     if (!_browserOptions.toolbartranslucent) { // Set toolbar translucent to no if user sets it in options
       self.toolbar.translucent = NO;
     }
+    
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0.0 , 11.0f, self.view.frame.size.width, LOCATIONBAR_HEIGHT)];
+    [self.titleLabel setBackgroundColor:[UIColor clearColor]];
+    [self.titleLabel setTextColor:[UIColor colorWithRed:51.0/255.0 green:51.0/255.0 blue:51.0/255.0 alpha:1.0]];
+    [self.titleLabel setText:@"Loading..."];
+    if ([self.titleLabel respondsToSelector:NSSelectorFromString(@"setMinimumScaleFactor:")]) {
+        [self.titleLabel setValue:@(10.0/[UIFont labelFontSize]) forKey:@"minimumScaleFactor"];
+    } else if ([self.titleLabel respondsToSelector:NSSelectorFromString(@"setMinimumFontSize:")]) {
+        [self.titleLabel setValue:@(10.0) forKey:@"minimumFontSize"];
+    }
+    [self.titleLabel setTextAlignment:NSTextAlignmentCenter];
+    self.titleButton = [[UIBarButtonItem alloc] initWithCustomView:self.titleLabel];
+    
     
     CGFloat labelInset = 5.0;
     float locationBarY = toolbarIsAtBottom ? self.view.bounds.size.height - FOOTER_HEIGHT : self.view.bounds.size.height - LOCATIONBAR_HEIGHT;
@@ -875,38 +912,25 @@ BOOL isExiting = FALSE;
     self.addressLabel.textColor = [UIColor colorWithWhite:1.000 alpha:1.000];
     self.addressLabel.userInteractionEnabled = NO;
     
-    NSString* frontArrowString = NSLocalizedString(@"►", nil); // create arrow from Unicode char
-    self.forwardButton = [[UIBarButtonItem alloc] initWithTitle:frontArrowString style:UIBarButtonItemStylePlain target:self action:@selector(goForward:)];
-    self.forwardButton.enabled = YES;
-    self.forwardButton.imageInsets = UIEdgeInsetsZero;
-    if (_browserOptions.navigationbuttoncolor != nil) { // Set button color if user sets it in options
-      self.forwardButton.tintColor = [self colorFromHexString:_browserOptions.navigationbuttoncolor];
-    }
-
-    NSString* backArrowString = NSLocalizedString(@"◄", nil); // create arrow from Unicode char
-    self.backButton = [[UIBarButtonItem alloc] initWithTitle:backArrowString style:UIBarButtonItemStylePlain target:self action:@selector(goBack:)];
+    
+    UIButton *backButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    UIImage * backImage = [UIImage imageNamed:@"back.png"];
+    [backButton setImage:backImage forState:UIControlStateNormal];
+    [backButton addTarget:self action:@selector(close) forControlEvents:UIControlEventTouchUpInside];
+    [backButton.widthAnchor constraintEqualToConstant:26].active = YES;
+    [backButton.heightAnchor constraintEqualToConstant:26].active = YES;
+    backButton.layer.maskedCorners = kCALayerMinXMinYCorner | kCALayerMinXMaxYCorner;
+    
+    self.backButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCamera target:self action:@selector(goBack:)];
+    self.backButton = [[UIBarButtonItem alloc] initWithCustomView:backButton];
     self.backButton.enabled = YES;
-    self.backButton.imageInsets = UIEdgeInsetsZero;
-    if (_browserOptions.navigationbuttoncolor != nil) { // Set button color if user sets it in options
-      self.backButton.tintColor = [self colorFromHexString:_browserOptions.navigationbuttoncolor];
-    }
-
-    // Filter out Navigation Buttons if user requests so
-    if (_browserOptions.hidenavigationbuttons) {
-        if (_browserOptions.lefttoright) {
-            [self.toolbar setItems:@[flexibleSpaceButton, self.closeButton]];
-        } else {
-            [self.toolbar setItems:@[self.closeButton, flexibleSpaceButton]];
-        }
-    } else if (_browserOptions.lefttoright) {
-        [self.toolbar setItems:@[self.backButton, fixedSpaceButton, self.forwardButton, flexibleSpaceButton, self.closeButton]];
-    } else {
-        [self.toolbar setItems:@[self.closeButton, flexibleSpaceButton, self.backButton, fixedSpaceButton, self.forwardButton]];
-    }
+    
+    UIBarButtonItem* fixedSpaceButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixedSpaceButton.width = -6;
+    [self.toolbar setItems:@[fixedSpaceButton, self.backButton, self.titleButton, self.moreButton, self.closeButton]];
     
     self.view.backgroundColor = [UIColor clearColor];
     [self.view addSubview:self.toolbar];
-    [self.view addSubview:self.addressLabel];
     [self.view addSubview:self.spinner];
 }
 
@@ -1167,10 +1191,8 @@ BOOL isExiting = FALSE;
 - (void)webView:(WKWebView *)theWebView didStartProvisionalNavigation:(WKNavigation *)navigation{
     
     // loading url, start spinner, update back/forward
-    
-    self.addressLabel.text = NSLocalizedString(@"Loading...", nil);
+//    self.titleLabel.text = NSLocalizedString(@"Loading...", nil);
     self.backButton.enabled = theWebView.canGoBack;
-    self.forwardButton.enabled = theWebView.canGoForward;
     
     NSLog(_browserOptions.hidespinner ? @"Yes" : @"No");
     if(!_browserOptions.hidespinner) {
@@ -1198,9 +1220,8 @@ BOOL isExiting = FALSE;
 {
     // update url, stop spinner, update back/forward
     
-    self.addressLabel.text = [self.currentURL absoluteString];
+    self.titleLabel.text = theWebView.title;
     self.backButton.enabled = theWebView.canGoBack;
-    self.forwardButton.enabled = theWebView.canGoForward;
     theWebView.scrollView.contentInset = UIEdgeInsetsZero;
     
     [self.spinner stopAnimating];
@@ -1213,10 +1234,9 @@ BOOL isExiting = FALSE;
     NSLog(@"webView:%@ - %ld: %@", delegateName, (long)error.code, [error localizedDescription]);
     
     self.backButton.enabled = theWebView.canGoBack;
-    self.forwardButton.enabled = theWebView.canGoForward;
     [self.spinner stopAnimating];
     
-    self.addressLabel.text = NSLocalizedString(@"Load Error", nil);
+    self.titleLabel.text = NSLocalizedString(@"Load Error", nil);
     
     [self.navigationDelegate webView:theWebView didFailNavigation:error];
 }

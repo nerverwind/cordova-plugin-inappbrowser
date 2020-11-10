@@ -87,6 +87,9 @@
 	    <header-file src="src/ios/CDVWKInAppBrowserUIDelegate.h" />
 	    <source-file src="src/ios/CDVWKInAppBrowserUIDelegate.m" />
 
+        <header-file src="src/ios/CDVInAppBrowserMenuDialog.h" />
+        <source-file src="src/ios/CDVInAppBrowserMenuDialog.m" />
+
         <resource-file src="src/ios/CDVWKInAppBrowser.bundle/close.png" />
         <resource-file src="src/ios/CDVWKInAppBrowser.bundle/more.png" />
         <resource-file src="src/ios/CDVWKInAppBrowser.bundle/back.png" />
