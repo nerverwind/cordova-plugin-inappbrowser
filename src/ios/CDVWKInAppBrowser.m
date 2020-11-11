@@ -917,12 +917,11 @@ BOOL isExiting = FALSE;
     UIButton *backButton = [UIButton buttonWithType:UIButtonTypeCustom];
     UIImage * backImage = [UIImage imageNamed:@"back.png"];
     [backButton setImage:backImage forState:UIControlStateNormal];
-    [backButton addTarget:self action:@selector(close) forControlEvents:UIControlEventTouchUpInside];
+    [backButton addTarget:self action:@selector(goBack:) forControlEvents:UIControlEventTouchUpInside];
     [backButton.widthAnchor constraintEqualToConstant:26].active = YES;
     [backButton.heightAnchor constraintEqualToConstant:26].active = YES;
     backButton.layer.maskedCorners = kCALayerMinXMinYCorner | kCALayerMinXMaxYCorner;
     
-    self.backButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCamera target:self action:@selector(goBack:)];
     self.backButton = [[UIBarButtonItem alloc] initWithCustomView:backButton];
     self.backButton.enabled = YES;
     
