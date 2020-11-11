@@ -40,6 +40,7 @@
 
 
 #pragma mark CDVWKInAppBrowser
+#import "CDVInAppBrowserMenuDialog.h"
 
 @interface CDVWKInAppBrowser () {
     NSInteger _previousStatusBarStyle;
@@ -834,7 +835,7 @@ BOOL isExiting = FALSE;
     UIButton *moreButton = [UIButton buttonWithType:UIButtonTypeCustom];
     UIImage * moreImage = [UIImage imageNamed:@ "more.png"];
     [moreButton setImage:moreImage forState:UIControlStateNormal];
-    [moreButton addTarget:self action:@selector(close) forControlEvents:UIControlEventTouchUpInside];
+    [moreButton addTarget:self action:@selector(showMenu) forControlEvents:UIControlEventTouchUpInside];
     [moreButton.widthAnchor constraintEqualToConstant:34].active = YES;
     [moreButton.heightAnchor constraintEqualToConstant:26].active = YES;
     [moreButton setImageEdgeInsets: UIEdgeInsetsMake(6, 10, 6, 10)];
@@ -1116,6 +1117,58 @@ BOOL isExiting = FALSE;
             [[weakSelf parentViewController] dismissViewControllerAnimated:YES completion:nil];
         }
     });
+}
+
+-(void)clickMenu:(UIButton *)sender
+{
+    
+    switch (sender.tag) {
+        case MenuTypeRefresh:
+            {
+                [self.webView reload];
+                break;
+            }
+        case MenuTypeCopy:
+            {
+                UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+                pasteboard.string = [self.webView.URL absoluteString];
+                [self ShowAlert:NSLocalizedString(@"Copy successfully", nil)];
+                break;
+            }
+        default:
+            break;
+    }
+}
+
+- (void) ShowAlert:(NSString *)message {
+    UIAlertController * alert=[UIAlertController alertControllerWithTitle:nil message:@"" preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIView *firstSubview = alert.view.subviews.firstObject;
+    UIView *alertContentView = firstSubview.subviews.firstObject;
+    for (UIView *subSubView in alertContentView.subviews) {
+        subSubView.backgroundColor = [UIColor colorWithRed:0.0/255.0f green:0.0/255.0f blue:0.0/255.0f alpha:1.0f];
+    }
+    
+    NSMutableAttributedString *AS = [[NSMutableAttributedString alloc] initWithString:message];
+    [AS addAttribute: NSForegroundColorAttributeName value: [UIColor whiteColor] range: NSMakeRange(0,AS.length)];
+    [AS addAttribute: NSFontAttributeName value: [UIFont systemFontOfSize:13.0] range: NSMakeRange(0,AS.length)];
+    [alert setValue:AS forKey:@"attributedTitle"];
+    
+    [self presentViewController:alert animated:YES completion:nil];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [alert dismissViewControllerAnimated:YES completion:^{
+        }];
+    });
+}
+
+- (void)showMenu {
+    CDVInAppBrowserMenuDialog *menuDialog = [[CDVInAppBrowserMenuDialog alloc] init];
+    
+    NSString *hostURL = self.currentURL.host;
+    NSString *faviconURL = [NSString stringWithFormat:@"http://%@/favicon.ico",hostURL];
+    UIImage *faviconImage = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:faviconURL]]];
+    
+    [menuDialog showMenuDialogWithTitle: self.webView.title url:[self.currentURL absoluteString] iconImage:faviconImage menuButtonAction:@selector(clickMenu:) parentId: self] ;
 }
 
 - (void)navigateTo:(NSURL*)url
