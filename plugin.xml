@@ -83,7 +83,12 @@
         <resource-file src="src/android/res/drawable-hdpi/ic_action_refresh.png" target="res/drawable-hdpi/ic_action_refresh.png" />
         <resource-file src="src/android/res/drawable-mdpi/ic_action_refresh.png" target="res/drawable-mdpi/ic_action_refresh.png" />
         <resource-file src="src/android/res/drawable-xhdpi/ic_action_refresh.png" target="res/drawable-xhdpi/ic_action_refresh.png" />
-        <resource-file src="src/android/res/drawable-xxhdpi/ic_action_refresh.png" target="res/drawable-xxhdpi/ic_action_refresh.png" />                                
+        <resource-file src="src/android/res/drawable-xxhdpi/ic_action_refresh.png" target="res/drawable-xxhdpi/ic_action_refresh.png" /> 
+
+        <resource-file src="src/android/res/drawable-hdpi/ic_action_back.png" target="res/drawable-hdpi/ic_action_back.png" />
+        <resource-file src="src/android/res/drawable-mdpi/ic_action_back.png" target="res/drawable-mdpi/ic_action_back.png" />
+        <resource-file src="src/android/res/drawable-xhdpi/ic_action_back.png" target="res/drawable-xhdpi/ic_action_back.png" />
+        <resource-file src="src/android/res/drawable-xxhdpi/ic_action_back.png" target="res/drawable-xxhdpi/ic_action_back.png" />                                        
 
     </platform>
 
