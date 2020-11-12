@@ -36,6 +36,7 @@
 
     <!-- android -->
     <platform name="android">
+        <framework src="com.google.android.material:material:1.0.0" />
         <js-module src="www/inappbrowser.js" name="inappbrowser">
             <clobbers target="cordova.InAppBrowser.open" />
         </js-module>
