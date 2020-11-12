@@ -39,6 +39,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -775,6 +776,7 @@ public class InAppBrowser extends CordovaPlugin {
 
                 gd.setStroke(strokeWidth, strokeColor);
                 moreButton.setBackground(gd);
+                moreButton.setPadding(this.dpToPixels(5), this.dpToPixels(5), this.dpToPixels(5), this.dpToPixels(5));
 
                 return moreButton;
             }
@@ -836,6 +838,7 @@ public class InAppBrowser extends CordovaPlugin {
                 gd.setCornerRadii(new float[] { 0, 0, roundRadius, roundRadius, roundRadius, roundRadius,  0, 0});
                 gd.setStroke(strokeWidth, strokeColor);
                 _close.setBackground(gd);
+                _close.setPadding(this.dpToPixels(5), this.dpToPixels(5), this.dpToPixels(5), this.dpToPixels(5));
 
 
 
@@ -895,7 +898,7 @@ public class InAppBrowser extends CordovaPlugin {
                 back.setContentDescription("Back Button");
                 back.setId(Integer.valueOf(2));
                 Resources activityRes = cordova.getActivity().getResources();
-                int backResId = activityRes.getIdentifier("ic_action_previous_item", "drawable", cordova.getActivity().getPackageName());
+                int backResId = activityRes.getIdentifier("ic_action_back", "drawable", cordova.getActivity().getPackageName());
                 Drawable backIcon = activityRes.getDrawable(backResId);
                 if (navigationButtonColor != "") back.setColorFilter(android.graphics.Color.parseColor(navigationButtonColor));
                 if (Build.VERSION.SDK_INT >= 16)
@@ -914,6 +917,7 @@ public class InAppBrowser extends CordovaPlugin {
                     }
                 });
 
+                back.setPadding(this.dpToPixels(3), this.dpToPixels(5), this.dpToPixels(3), this.dpToPixels(5));
                 // Forward button
                 ImageButton forward = new ImageButton(cordova.getActivity());
                 RelativeLayout.LayoutParams forwardLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
@@ -968,19 +972,20 @@ public class InAppBrowser extends CordovaPlugin {
                 //
                 titleView = new TextView(cordova.getActivity());
                 titleView.setSingleLine();
-//                titleView.setEllipsize(TextUtils.TruncateAt.END);
                 titleView.setGravity(Gravity.CENTER);
+                titleView.setEllipsize(TextUtils.TruncateAt.END);
+                titleView.setPadding(this.dpToPixels(96), 0, this.dpToPixels(96), 0);
 
-//                titleView.setTextAppearance(cordova.getActivity(), io.ionic.starter.R.style.TextAppearance_AppCompat_Widget_ActionBar_Title);
 
                 LayoutParams lp1 = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
                 lp1.gravity = Gravity.CENTER;
                 titleView.setLayoutParams(lp1);
 
                 titleView.setId(Integer.valueOf(7));
-                titleView.setGravity(Gravity.CENTER);
                 titleView.setTextColor(Color.parseColor("#333333"));
                 titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+
+
 
 
 
@@ -1127,7 +1132,7 @@ public class InAppBrowser extends CordovaPlugin {
 
                 // Add the back and forward buttons to our action button container layout
                 actionButtonContainer.addView(back);
-                actionButtonContainer.addView(forward);
+//                actionButtonContainer.addView(forward);
 
                 // Add the views to our toolbar if they haven't been disabled
                 if (!hideNavigationButtons) toolbar.addView(actionButtonContainer);
