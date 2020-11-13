@@ -50,8 +50,8 @@
         <source-file src="src/android/InAppBrowserDialog.java" target-dir="src/org/apache/cordova/inappbrowser" />
         <source-file src="src/android/InAppChromeClient.java" target-dir="src/org/apache/cordova/inappbrowser" />
 
-        <resource-file src="src/res/drawable/styles.xml" target="res/values/styles/styles.xml" />
-        <resource-file src="src/res/drawable/rounder_dialog.xml" target="res/drawable/rounder_dialog.xml" />
+        <resource-file src="src/android/res/drawable/styles.xml" target="res/values/styles/styles.xml" />
+        <resource-file src="src/android/res/drawable/rounder_dialog.xml" target="res/drawable/rounder_dialog.xml" />
 
         <!-- drawable src/android/resources -->
         <resource-file src="src/android/res/drawable-hdpi/ic_action_next_item.png" target="res/drawable-hdpi/ic_action_next_item.png" />
