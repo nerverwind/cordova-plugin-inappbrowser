@@ -871,12 +871,9 @@ BOOL isExiting = FALSE;
     self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0.0 , 11.0f, self.view.frame.size.width, LOCATIONBAR_HEIGHT)];
     [self.titleLabel setBackgroundColor:[UIColor clearColor]];
     [self.titleLabel setTextColor:[UIColor colorWithRed:51.0/255.0 green:51.0/255.0 blue:51.0/255.0 alpha:1.0]];
-    [self.titleLabel setText:@"Loading..."];
-    if ([self.titleLabel respondsToSelector:NSSelectorFromString(@"setMinimumScaleFactor:")]) {
-        [self.titleLabel setValue:@(10.0/[UIFont labelFontSize]) forKey:@"minimumScaleFactor"];
-    } else if ([self.titleLabel respondsToSelector:NSSelectorFromString(@"setMinimumFontSize:")]) {
-        [self.titleLabel setValue:@(10.0) forKey:@"minimumFontSize"];
-    }
+    
+    [self.titleLabel setFont:[UIFont systemFontOfSize:14.0]];
+    
     [self.titleLabel setTextAlignment:NSTextAlignmentCenter];
     self.titleButton = [[UIBarButtonItem alloc] initWithCustomView:self.titleLabel];
     
@@ -1162,12 +1159,7 @@ BOOL isExiting = FALSE;
 
 - (void)showMenu {
     CDVInAppBrowserMenuDialog *menuDialog = [[CDVInAppBrowserMenuDialog alloc] init];
-    
-    NSString *hostURL = self.currentURL.host;
-    NSString *faviconURL = [NSString stringWithFormat:@"http://%@/favicon.ico",hostURL];
-    UIImage *faviconImage = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:faviconURL]]];
-    
-    [menuDialog showMenuDialogWithTitle: self.webView.title url:[self.currentURL absoluteString] iconImage:faviconImage menuButtonAction:@selector(clickMenu:) parentId: self] ;
+    [menuDialog showMenuDialogWithTitle: self.webView.title url:[self.currentURL absoluteString] iconImage:self.faviconImage menuButtonAction:@selector(clickMenu:) parentId: self] ;
 }
 
 - (void)navigateTo:(NSURL*)url
@@ -1243,9 +1235,8 @@ BOOL isExiting = FALSE;
 - (void)webView:(WKWebView *)theWebView didStartProvisionalNavigation:(WKNavigation *)navigation{
     
     // loading url, start spinner, update back/forward
-//    self.titleLabel.text = NSLocalizedString(@"Loading...", nil);
     self.backButton.enabled = theWebView.canGoBack;
-    
+    [self.titleLabel setText:[theWebView.URL absoluteString]];
     NSLog(_browserOptions.hidespinner ? @"Yes" : @"No");
     if(!_browserOptions.hidespinner) {
         [self.spinner startAnimating];
@@ -1275,9 +1266,11 @@ BOOL isExiting = FALSE;
     self.titleLabel.text = theWebView.title;
     self.backButton.enabled = theWebView.canGoBack;
     theWebView.scrollView.contentInset = UIEdgeInsetsZero;
-    
+    NSString *hostURL = self.currentURL.host;
+    NSString *faviconURL = [NSString stringWithFormat:@"http://%@/favicon.ico",hostURL];
+    UIImage *faviconImage = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:faviconURL]]];
+    self.faviconImage = faviconImage;
     [self.spinner stopAnimating];
-    
     [self.navigationDelegate didFinishNavigation:theWebView];
 }
     
@@ -1287,8 +1280,6 @@ BOOL isExiting = FALSE;
     
     self.backButton.enabled = theWebView.canGoBack;
     [self.spinner stopAnimating];
-    
-    self.titleLabel.text = NSLocalizedString(@"Load Error", nil);
     
     [self.navigationDelegate webView:theWebView didFailNavigation:error];
 }
