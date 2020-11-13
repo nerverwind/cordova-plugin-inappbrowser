@@ -89,6 +89,9 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+
 @SuppressLint("SetJavaScriptEnabled")
 public class InAppBrowser extends CordovaPlugin {
 
@@ -562,6 +565,18 @@ public class InAppBrowser extends CordovaPlugin {
         });
     }
 
+    public void showMenuDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(cordova.getActivity());
+        dialog.setCancelable(true);
+        View view = new View(cordova.getActivity());
+        dialog.setContentView(view);
+        BottomSheetBehavior mBehavior = BottomSheetBehavior.from((View) view.getParent());
+
+        mBehavior.setPeekHeight(460);
+
+        dialog.show();
+    }
+
     /**
      * Checks to see if it is possible to go back one page in history, then does so.
      */
@@ -762,7 +777,7 @@ public class InAppBrowser extends CordovaPlugin {
                 moreButton.setId(Integer.valueOf(id));
                 moreButton.setOnClickListener(new ImageButton.OnClickListener() {
                     public void onClick(View v) {
-                        closeDialog();
+                        showMenuDialog();
                     }
                 });
 
@@ -855,8 +870,27 @@ public class InAppBrowser extends CordovaPlugin {
 
                 // Let's create the main dialog
                 dialog = new InAppBrowserDialog(cordova.getActivity(), android.R.style.Theme_NoTitleBar);
+
+                if(!fullscreen) {
+                    Window window = dialog.getWindow();
+                    window.getDecorView().setSystemUiVisibility(
+                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                    |View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+
+
+                    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                    window.setStatusBarColor(Color.TRANSPARENT);
+
+                    View decorView = window.getDecorView();
+                    int uiOptions = decorView.getSystemUiVisibility();
+                    decorView.setSystemUiVisibility(uiOptions | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                }
+
+
                 dialog.getWindow().getAttributes().windowAnimations = android.R.style.Animation_Dialog;
                 dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+
                 if (fullscreen) {
                     dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
                 }
@@ -871,8 +905,10 @@ public class InAppBrowser extends CordovaPlugin {
                 RelativeLayout toolbar = new RelativeLayout(cordova.getActivity());
                 //Please, no more black!
                 toolbar.setBackgroundColor(toolbarColor);
-                toolbar.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(44)));
-                toolbar.setPadding(this.dpToPixels(6), this.dpToPixels(8), this.dpToPixels(6), this.dpToPixels(8));
+                int toolbarHeight = !fullscreen ? this.dpToPixels(64) : this.dpToPixels(44);
+                toolbar.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, toolbarHeight));
+                int top = !fullscreen ? this.dpToPixels(28) : this.dpToPixels(8);
+                toolbar.setPadding(this.dpToPixels(6), top, this.dpToPixels(6), this.dpToPixels(8));
                 if (leftToRight) {
                     toolbar.setHorizontalGravity(Gravity.LEFT);
                 } else {
