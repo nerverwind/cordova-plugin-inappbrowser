@@ -61,6 +61,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -91,6 +92,10 @@ import java.util.StringTokenizer;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.squareup.picasso.Picasso;
+
+import io.ionic.starter.R;
+
 
 @SuppressLint("SetJavaScriptEnabled")
 public class InAppBrowser extends CordovaPlugin {
@@ -565,14 +570,147 @@ public class InAppBrowser extends CordovaPlugin {
         });
     }
 
-    public void showMenuDialog() {
-        BottomSheetDialog dialog = new BottomSheetDialog(cordova.getActivity());
-        dialog.setCancelable(true);
-        View view = new View(cordova.getActivity());
-        dialog.setContentView(view);
-        BottomSheetBehavior mBehavior = BottomSheetBehavior.from((View) view.getParent());
+    private int dpToPixels(int dipValue) {
+        int value = (int) TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP,
+                (float) dipValue,
+                cordova.getActivity().getResources().getDisplayMetrics()
+        );
 
-        mBehavior.setPeekHeight(460);
+        return value;
+    }
+
+    public void showMenuDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(cordova.getActivity(), R.style.AppBottomSheetDialogTheme);
+        dialog.setCancelable(true);
+
+        RelativeLayout dialogMain = new RelativeLayout(cordova.getActivity());
+        dialogMain.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(420)));
+        dialogMain.setPadding(0, this.dpToPixels(20), 0, 0);
+        dialogMain.setMinimumHeight(this.dpToPixels(420));
+
+
+
+//        RelativeLayout dialogView = new RelativeLayout(cordova.getActivity());
+//        dialogView.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(420)));
+//        dialogView.setPadding(0, this.dpToPixels(20), 0, 0);
+//        dialogView.setMinimumHeight(this.dpToPixels(420));
+
+        LinearLayout dialogView = new LinearLayout(dialogMain.getContext());
+        dialogView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(370)));
+        dialogView.setOrientation(LinearLayout.VERTICAL);
+
+        RelativeLayout toolbarView = new RelativeLayout(dialogView.getContext());
+        RelativeLayout.LayoutParams toolbarViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(44));
+        toolbarView.setLayoutParams(toolbarViewLayout);
+        toolbarView.setBackgroundColor(Color.parseColor("#ffffff"));
+        toolbarView.setId(Integer.valueOf(20));
+        toolbarView.setPadding(this.dpToPixels(16), 0, this.dpToPixels(16), this.dpToPixels(8));
+
+
+        ImageView faviconImageView = new ImageView(toolbarView.getContext());
+        RelativeLayout.LayoutParams faviconImageViewLayout = new RelativeLayout.LayoutParams(this.dpToPixels(28), this.dpToPixels(28));
+        faviconImageViewLayout.addRule(RelativeLayout.ALIGN_LEFT, RelativeLayout.TRUE);
+        faviconImageView.setLayoutParams(faviconImageViewLayout);
+        faviconImageView.setId(Integer.valueOf(21));
+        String faviconUrl =  Uri.parse(this.inAppWebView.getUrl()).getScheme() + "://" + Uri.parse(this.inAppWebView.getUrl()).getHost() + "/favicon.ico";
+        Picasso.get().load(faviconUrl).into(faviconImageView);
+        faviconImageView.setPadding(0, 0, this.dpToPixels(6), 0);
+
+        RelativeLayout pageInfoView = new RelativeLayout(toolbarView.getContext());
+        RelativeLayout.LayoutParams pageInfoViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(44));
+        pageInfoViewLayout.addRule(RelativeLayout.RIGHT_OF, Integer.valueOf(21));
+        pageInfoView.setLayoutParams(pageInfoViewLayout);
+
+
+        LinearLayout pageInfo = new LinearLayout(toolbarView.getContext());
+        pageInfo.setOrientation(LinearLayout.VERTICAL);
+        pageInfo.setId(Integer.valueOf(23));
+
+        TextView titleView = new TextView(pageInfo.getContext());
+        RelativeLayout.LayoutParams titleViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(14));
+        titleViewLayout.addRule(RelativeLayout.ALIGN_TOP, RelativeLayout.TRUE);
+
+        titleView.setSingleLine();
+        titleView.setEllipsize(TextUtils.TruncateAt.END);
+        titleView.setId(Integer.valueOf(22));
+
+        titleView.setText(this.inAppWebView.getTitle());
+        titleView.setTextColor(Color.parseColor("#333333"));
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+
+        pageInfo.addView(titleView);
+
+
+        TextView urlView = new TextView(pageInfo.getContext());
+        RelativeLayout.LayoutParams urlViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(12));
+        urlViewLayout.addRule(RelativeLayout.END_OF, Integer.valueOf(23));
+        urlView.setLayoutParams(urlViewLayout);
+        urlView.setSingleLine();
+        urlView.setEllipsize(TextUtils.TruncateAt.END);
+        urlView.setText(this.inAppWebView.getUrl());
+        urlView.setTextColor(Color.parseColor("#333333"));
+        urlView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+
+        pageInfo.addView(urlView);
+        pageInfoView.addView(pageInfo);
+
+        toolbarView.addView(faviconImageView);
+        toolbarView.addView(pageInfoView);
+
+
+        dialogView.addView(toolbarView);
+
+        TextView lineView = new TextView(dialogView.getContext());
+        RelativeLayout.LayoutParams lineViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(1));
+        lineViewLayout.addRule(RelativeLayout.ALIGN_BOTTOM, Integer.valueOf(20));
+        lineView.setLayoutParams(lineViewLayout);
+        lineView.setBackgroundColor(Color.parseColor("#cccccc"));
+        lineView.setId(Integer.valueOf(24));
+
+        dialogView.addView(lineView);
+
+        RelativeLayout buttonListView = new RelativeLayout(dialogView.getContext());
+        RelativeLayout.LayoutParams buttonListViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(80));
+        buttonListViewLayout.addRule(RelativeLayout.ALIGN_BOTTOM, Integer.valueOf(24));
+        buttonListView.setLayoutParams(buttonListViewLayout);
+
+        buttonListView.setBackgroundColor(Color.parseColor("#333333"));
+
+        dialogView.addView(buttonListView);
+
+
+
+
+        RelativeLayout cancelButtonView = new RelativeLayout(dialogMain.getContext());
+        RelativeLayout.LayoutParams cancelButtonViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(50));
+        cancelButtonViewLayout.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+
+        cancelButtonView.setLayoutParams(cancelButtonViewLayout);
+//        cancelButtonView.setBackgroundColor(Color.parseColor("#333333"));
+        cancelButtonView.setVerticalGravity(Gravity.BOTTOM);
+        cancelButtonView.setHorizontalGravity(Gravity.CENTER);
+
+        cancelButtonView.setPadding(this.dpToPixels(16), this.dpToPixels(6), this.dpToPixels(16), this.dpToPixels(6));
+
+        Button cancelButton = new Button(cancelButtonView.getContext());
+        RelativeLayout.LayoutParams cancelButtonLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(44));
+        cancelButton.setLayoutParams(cancelButtonLayout);
+        cancelButton.setText("Cancel");
+        cancelButton.setBackgroundColor(Color.parseColor("#cccccc"));
+        cancelButton.setTextColor(Color.parseColor("#333333"));
+
+        cancelButtonView.addView(cancelButton);
+
+        dialogMain.addView(cancelButtonView);
+
+        dialogMain.addView(dialogView);
+
+
+
+
+        dialog.setContentView(dialogMain);
+//        BottomSheetBehavior mBehavior = BottomSheetBehavior.from((View) view.getParent());
+//        mBehavior.setPeekHeight(460);
 
         dialog.show();
     }
