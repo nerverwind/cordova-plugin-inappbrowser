@@ -20,6 +20,8 @@ package org.apache.cordova.inappbrowser;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -68,6 +70,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.Config;
@@ -80,6 +83,7 @@ import org.apache.cordova.PluginManager;
 import org.apache.cordova.PluginResult;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Field;
@@ -584,16 +588,19 @@ public class InAppBrowser extends CordovaPlugin {
         dialog.setCancelable(true);
 
         RelativeLayout dialogMain = new RelativeLayout(cordova.getActivity());
-        dialogMain.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(420)));
+        dialogMain.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(350)));
         dialogMain.setPadding(0, this.dpToPixels(20), 0, 0);
-        dialogMain.setMinimumHeight(this.dpToPixels(420));
+        dialogMain.setMinimumHeight(this.dpToPixels(350));
+
+        int roundRadius = 36;
 
 
+        GradientDrawable gd = new GradientDrawable();
+        gd.setColor(Color.parseColor("#e9eaeb"));
+        gd.setCornerRadii(new float[] {roundRadius, roundRadius, roundRadius, roundRadius, 0, 0, 0, 0});
 
-//        RelativeLayout dialogView = new RelativeLayout(cordova.getActivity());
-//        dialogView.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(420)));
-//        dialogView.setPadding(0, this.dpToPixels(20), 0, 0);
-//        dialogView.setMinimumHeight(this.dpToPixels(420));
+        dialogMain.setBackground(gd);
+
 
         LinearLayout dialogView = new LinearLayout(dialogMain.getContext());
         dialogView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(370)));
@@ -602,7 +609,6 @@ public class InAppBrowser extends CordovaPlugin {
         RelativeLayout toolbarView = new RelativeLayout(dialogView.getContext());
         RelativeLayout.LayoutParams toolbarViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(44));
         toolbarView.setLayoutParams(toolbarViewLayout);
-        toolbarView.setBackgroundColor(Color.parseColor("#ffffff"));
         toolbarView.setId(Integer.valueOf(20));
         toolbarView.setPadding(this.dpToPixels(16), 0, this.dpToPixels(16), this.dpToPixels(8));
 
@@ -670,15 +676,116 @@ public class InAppBrowser extends CordovaPlugin {
         dialogView.addView(lineView);
 
         RelativeLayout buttonListView = new RelativeLayout(dialogView.getContext());
-        RelativeLayout.LayoutParams buttonListViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(80));
+        RelativeLayout.LayoutParams buttonListViewLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(100));
         buttonListViewLayout.addRule(RelativeLayout.ALIGN_BOTTOM, Integer.valueOf(24));
         buttonListView.setLayoutParams(buttonListViewLayout);
 
-        buttonListView.setBackgroundColor(Color.parseColor("#333333"));
+
+        GradientDrawable buttonGd = new GradientDrawable();
+        buttonGd.setColor(Color.parseColor("#FFFFFF"));
+        buttonGd.setCornerRadius(26);
+        Resources activityRes = cordova.getActivity().getResources();
+
+        LinearLayout copyButtonView = new LinearLayout(buttonListView.getContext());
+        LinearLayout.LayoutParams copyButtonViewLayout = new LinearLayout.LayoutParams(this.dpToPixels(70), this.dpToPixels(100));
+        copyButtonView.setLayoutParams(copyButtonViewLayout);
+        copyButtonView.setOrientation(LinearLayout.VERTICAL);
+        copyButtonView.setGravity(Gravity.CENTER);
+
+
+        ImageButton copyButton = new ImageButton(copyButtonView.getContext());
+        copyButton.setLayoutParams(new LinearLayout.LayoutParams(this.dpToPixels(50), this.dpToPixels(50)));
+        int copyResId = activityRes.getIdentifier("ic_action_copy", "drawable", cordova.getActivity().getPackageName());
+        Drawable closeIcon = activityRes.getDrawable(copyResId);
+        copyButton.setImageDrawable(closeIcon);
+        copyButton.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        copyButton.setBackground(buttonGd);
+        copyButton.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View v) {
+                dialog.cancel();
+                ClipboardManager clipboard = (ClipboardManager) cordova.getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("label", inAppWebView.getUrl());
+                clipboard.setPrimaryClip(clip);
+
+                Context context = cordova.getActivity();
+                CharSequence text = "Copy successfully.";
+                int duration = Toast.LENGTH_SHORT;
+
+                Toast toast = Toast.makeText(context, text, duration);
+                View view = toast.getView();
+                view.getBackground().setColorFilter(Color.parseColor("#333333"), PorterDuff.Mode.SRC_IN);
+                ArrayList<View> outViews = new ArrayList<View>();
+                view.findViewsWithText(outViews, text, View.FIND_VIEWS_WITH_TEXT);
+
+                for(int i = 0; i < outViews.size(); i++) {
+                    View outView = outViews.get(i);
+                    if(outView instanceof TextView) {
+                        ((TextView) outView).setTextColor(Color.parseColor("#FFFFFF"));
+                    }
+                }
+                toast.show();
+            }
+        });
+
+        TextView copyButtonTitleView = new TextView(copyButtonView.getContext());
+        copyButtonTitleView.setLayoutParams(new LinearLayout.LayoutParams(this.dpToPixels(80), this.dpToPixels(20)));
+        copyButtonTitleView.setText("Copy");
+        copyButtonTitleView.setTextColor(Color.parseColor("#333333"));
+        copyButtonTitleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+        copyButtonTitleView.setGravity(Gravity.CENTER);
+        copyButtonTitleView.setSingleLine();
+        copyButtonTitleView.setEllipsize(TextUtils.TruncateAt.END);
+
+        copyButtonView.addView(copyButton);
+        copyButtonView.addView(copyButtonTitleView);
+
+
+        LinearLayout refreshButtonView = new LinearLayout(buttonListView.getContext());
+        LinearLayout.LayoutParams refreshButtonViewLayout = new LinearLayout.LayoutParams(this.dpToPixels(80), this.dpToPixels(100));
+        refreshButtonViewLayout.setMargins(this.dpToPixels(80), 0, 0,0);
+        refreshButtonView.setLayoutParams(refreshButtonViewLayout);
+        refreshButtonView.setOrientation(LinearLayout.VERTICAL);
+        refreshButtonView.setGravity(Gravity.CENTER);
+
+
+
+        ImageButton refreshButton = new ImageButton(refreshButtonView.getContext());
+        refreshButton.setLayoutParams(new LinearLayout.LayoutParams(this.dpToPixels(50), this.dpToPixels(50)));
+
+        int refreshResId = activityRes.getIdentifier("ic_action_refresh", "drawable", cordova.getActivity().getPackageName());
+        Drawable refreshIcon = activityRes.getDrawable(refreshResId);
+        refreshButton.setImageDrawable(refreshIcon);
+        refreshButton.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        refreshButton.setBackground(buttonGd);
+
+        refreshButton.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View v) {
+                dialog.cancel();
+                inAppWebView.reload();
+            }
+        });
+
+
+        TextView refreshButtonTitleView = new TextView(refreshButtonView.getContext());
+        refreshButtonTitleView.setLayoutParams(new LinearLayout.LayoutParams(this.dpToPixels(80), this.dpToPixels(20)));
+        refreshButtonTitleView.setText("Refresh");
+        refreshButtonTitleView.setTextColor(Color.parseColor("#333333"));
+        refreshButtonTitleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+        refreshButtonTitleView.setGravity(Gravity.CENTER);
+        refreshButtonTitleView.setSingleLine();
+        refreshButtonTitleView.setEllipsize(TextUtils.TruncateAt.END);
+
+        refreshButtonView.addView(refreshButton);
+        refreshButtonView.addView(refreshButtonTitleView);
+
+        buttonListView.addView(copyButtonView);
+        buttonListView.addView(refreshButtonView);
+
+
 
         dialogView.addView(buttonListView);
-
-
 
 
         RelativeLayout cancelButtonView = new RelativeLayout(dialogMain.getContext());
@@ -686,18 +793,22 @@ public class InAppBrowser extends CordovaPlugin {
         cancelButtonViewLayout.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
 
         cancelButtonView.setLayoutParams(cancelButtonViewLayout);
-//        cancelButtonView.setBackgroundColor(Color.parseColor("#333333"));
         cancelButtonView.setVerticalGravity(Gravity.BOTTOM);
         cancelButtonView.setHorizontalGravity(Gravity.CENTER);
 
-        cancelButtonView.setPadding(this.dpToPixels(16), this.dpToPixels(6), this.dpToPixels(16), this.dpToPixels(6));
 
         Button cancelButton = new Button(cancelButtonView.getContext());
         RelativeLayout.LayoutParams cancelButtonLayout = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, this.dpToPixels(44));
         cancelButton.setLayoutParams(cancelButtonLayout);
         cancelButton.setText("Cancel");
-        cancelButton.setBackgroundColor(Color.parseColor("#cccccc"));
+        cancelButton.setBackgroundColor(Color.parseColor("#FFFFFF"));
         cancelButton.setTextColor(Color.parseColor("#333333"));
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View v) {
+                dialog.cancel();
+            }
+        });
 
         cancelButtonView.addView(cancelButton);
 
@@ -705,13 +816,7 @@ public class InAppBrowser extends CordovaPlugin {
 
         dialogMain.addView(dialogView);
 
-
-
-
         dialog.setContentView(dialogMain);
-//        BottomSheetBehavior mBehavior = BottomSheetBehavior.from((View) view.getParent());
-//        mBehavior.setPeekHeight(460);
-
         dialog.show();
     }
 
@@ -897,8 +1002,8 @@ public class InAppBrowser extends CordovaPlugin {
 
                 Resources activityRes = cordova.getActivity().getResources();
                 ImageButton moreButton = new ImageButton(cordova.getActivity());
-                int closeResId = activityRes.getIdentifier("ic_action_more", "drawable", cordova.getActivity().getPackageName());
-                Drawable closeIcon = activityRes.getDrawable(closeResId);
+                int moreResId = activityRes.getIdentifier("ic_action_more", "drawable", cordova.getActivity().getPackageName());
+                Drawable closeIcon = activityRes.getDrawable(moreResId);
                 moreButton.setImageDrawable(closeIcon);
 
                 RelativeLayout.LayoutParams moreLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
