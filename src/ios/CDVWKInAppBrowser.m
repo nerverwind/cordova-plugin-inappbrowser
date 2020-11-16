@@ -41,6 +41,10 @@
 
 #pragma mark CDVWKInAppBrowser
 #import "CDVInAppBrowserMenuDialog.h"
+#import <QuartzCore/QuartzCore.h>
+#import <objc/runtime.h>
+
+static UIView *prevToast = NULL;
 
 @interface CDVWKInAppBrowser () {
     NSInteger _previousStatusBarStyle;
@@ -1128,12 +1132,96 @@ BOOL isExiting = FALSE;
             {
                 UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
                 pasteboard.string = [self.webView.URL absoluteString];
-                [self ShowAlert:NSLocalizedString(@"Copy successfully", nil)];
+//                [self ShowAlert:NSLocalizedString(@"Copy successfully", nil)];
+                UIView * toast = [self viewForMessage:@"Copy successfully"];
+                [self showToast:toast duration:0.2 position:@"bottom" addedPixelsY:0];
                 break;
             }
         default:
             break;
     }
+}
+
+- (CGSize)sizeForString:(NSString *)string font:(UIFont *)font constrainedToSize:(CGSize)constrainedSize lineBreakMode:(NSLineBreakMode)lineBreakMode {
+    if ([string respondsToSelector:@selector(boundingRectWithSize:options:attributes:context:)]) {
+        NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+        paragraphStyle.lineBreakMode = lineBreakMode;
+        NSDictionary *attributes = @{NSFontAttributeName:font, NSParagraphStyleAttributeName:paragraphStyle};
+        CGRect boundingRect = [string boundingRectWithSize:constrainedSize options:NSStringDrawingUsesLineFragmentOrigin attributes:attributes context:nil];
+        return CGSizeMake(ceilf(boundingRect.size.width), ceilf(boundingRect.size.height));
+    }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    return [string sizeWithFont:font constrainedToSize:constrainedSize lineBreakMode:lineBreakMode];
+#pragma clang diagnostic pop
+}
+
+- (UIView *)viewForMessage:(NSString *)message {
+    // sanity
+    if(message == nil) return nil;
+
+    // dynamically build a toast view with any combination of message, title, & image.
+    UILabel *messageLabel = nil;
+    
+    // create the parent view
+    UIView *wrapperView = [[UIView alloc] init];
+    wrapperView.autoresizingMask = (UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin);
+
+    
+    wrapperView.layer.cornerRadius = 20.0;
+    
+    
+    wrapperView.layer.shadowColor = [UIColor blackColor].CGColor;
+    wrapperView.layer.shadowOpacity = 0.8;
+    wrapperView.layer.shadowRadius = 6.0;
+    wrapperView.layer.shadowOffset = CGSizeMake(4.0, 4.0);
+    
+
+    UIColor *theColor =  [UIColor blackColor];
+    CGFloat theHorizontalPadding = 16.0;
+
+    
+    CGFloat theVerticalPadding = 12.0;
+    CGFloat theTextSize = 13.0;
+    wrapperView.backgroundColor = theColor;
+    
+    
+    UIColor *theMessageLabelTextColor = [UIColor whiteColor];
+
+    messageLabel = [[UILabel alloc] init];
+    messageLabel.numberOfLines = 0;
+    messageLabel.font = [UIFont systemFontOfSize:theTextSize];
+    messageLabel.lineBreakMode = NSLineBreakByWordWrapping;
+    messageLabel.textAlignment = NSTextAlignmentCenter;
+    messageLabel.textColor = theMessageLabelTextColor;
+    messageLabel.backgroundColor = [UIColor clearColor];
+    messageLabel.alpha = 1.0;
+    messageLabel.text = message;
+    
+    
+    // size the message label according to the length of the text
+    CGSize maxSizeMessage = CGSizeMake((self.view.bounds.size.width * 0.8), self.view.bounds.size.height * 0.8);
+    CGSize expectedSizeMessage = [self sizeForString:message font:messageLabel.font constrainedToSize:maxSizeMessage lineBreakMode:messageLabel.lineBreakMode];
+    messageLabel.frame = CGRectMake(0.0, 0.0, expectedSizeMessage.width, expectedSizeMessage.height);
+    
+    
+    // messageLabel frame values
+    CGFloat messageWidth, messageHeight, messageLeft, messageTop;
+    messageWidth = messageLabel.bounds.size.width;
+    messageHeight = messageLabel.bounds.size.height;
+    messageLeft = theHorizontalPadding;
+    messageTop = theVerticalPadding;
+
+
+    CGFloat wrapperWidth = MAX((theHorizontalPadding * 2), (messageLeft + messageWidth + theHorizontalPadding));
+    CGFloat wrapperHeight = MAX((messageTop + messageHeight + theVerticalPadding),  (theVerticalPadding * 2));
+                         
+    wrapperView.frame = CGRectMake(0.0, 0.0, wrapperWidth, wrapperHeight);
+    messageLabel.frame = CGRectMake(messageLeft, messageTop, messageWidth, messageHeight);
+    [wrapperView addSubview:messageLabel];
+        
+    return wrapperView;
 }
 
 - (void) ShowAlert:(NSString *)message {
@@ -1155,6 +1243,73 @@ BOOL isExiting = FALSE;
         [alert dismissViewControllerAnimated:YES completion:^{
         }];
     });
+}
+
+- (void)hideToast:(UIView *)toast {
+    [UIView animateWithDuration:0.3
+                          delay:0.0
+                        options:(UIViewAnimationOptionCurveEaseIn | UIViewAnimationOptionBeginFromCurrentState)
+                     animations:^{
+                         toast.alpha = 0.0;
+                     } completion:^(BOOL finished) {
+                         [toast removeFromSuperview];
+                     }];
+}
+
+- (CGPoint)centerPointForPosition:(id)point withToast:(UIView *)toast withAddedPixelsY:(int) addPixelsY {
+    if([point isKindOfClass:[NSString class]]) {
+        // convert string literals @"top", @"bottom", @"center", or any point wrapped in an NSValue object into a CGPoint
+        if([point caseInsensitiveCompare:@"top"] == NSOrderedSame) {
+            return CGPointMake(self.view.bounds.size.width/2, (toast.frame.size.height / 2) + addPixelsY + 12.0 + 20.0);
+        } else if([point caseInsensitiveCompare:@"bottom"] == NSOrderedSame) {
+            return CGPointMake(self.view.bounds.size.width/2, (self.view.bounds.size.height - (toast.frame.size.height / 2)) - 12.0 - 20.0 + addPixelsY);
+        } else if([point caseInsensitiveCompare:@"center"] == NSOrderedSame) {
+            return CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height / 2) + addPixelsY);
+        }
+    } else if ([point isKindOfClass:[NSValue class]]) {
+        return [point CGPointValue];
+    }
+
+    NSLog(@"Warning: Invalid position for toast.");
+    return [self centerPointForPosition:@"bottom" withToast:toast withAddedPixelsY:addPixelsY];
+}
+
+- (UIViewController*) getTopMostViewController {
+  UIViewController *presentingViewController = [[UIApplication sharedApplication] keyWindow].rootViewController;
+  while (presentingViewController.presentedViewController != nil) {
+    presentingViewController = presentingViewController.presentedViewController;
+  }
+  return presentingViewController;
+}
+
+- (void)showToast:(UIView *)toast duration:(NSTimeInterval)duration position:(id)point addedPixelsY:(int) addPixelsY {
+    if(prevToast) {
+        [self hideToast:prevToast];
+    }
+    prevToast = toast;
+    toast.center = [self centerPointForPosition:point withToast:toast withAddedPixelsY:addPixelsY];
+    toast.alpha = 0.0;
+
+    // make sure that if InAppBrowser is active, we're still showing Toasts on top of it
+    UIViewController *vc = [self getTopMostViewController];
+    UIView *v = [vc view];
+    [v addSubview:toast];
+
+    CGFloat theOpacity = 0.8;
+
+    [UIView animateWithDuration:0.8
+                          delay:0.0
+                        options:(UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionAllowUserInteraction)
+                     animations:^{
+                         toast.alpha = theOpacity;
+                     } completion:^(BOOL finished) {
+                         NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:duration repeats:NO block:^(NSTimer *time) {
+                             [self hideToast:toast];
+                          }];
+                         // associate the timer with the toast view
+                         objc_setAssociatedObject (toast, @"CSToastTimerKey", timer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+                     }];
+
 }
 
 - (void)showMenu {
