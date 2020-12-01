@@ -2,7 +2,8 @@
 
 typedef NS_ENUM(NSUInteger , MenuType) {
     MenuTypeRefresh = 1,
-    MenuTypeCopy = 2
+    MenuTypeCopy = 2,
+    MenuTypeShare = 3
 };
 
 @interface MenuButton : NSObject

@@ -1,7 +1,7 @@
 #import "CDVInAppBrowserMenuDialog.h"
 
-static CGFloat const menuButtonHeight = 44.f;
-static CGFloat const menuButtonWidth = 44.f;
+static CGFloat const menuButtonHeight = 55.f;
+static CGFloat const menuButtonWidth = 55.f;
 static CGFloat const menuHeightSpace = 11.f;
 static CGFloat const menuCancelButtonHeight = 44.f;
 static CGFloat const menuViewPaddingTop = 44.f;
@@ -149,15 +149,22 @@ static CGFloat const menuButtonMarginBottom = 33.f;
     MenuButton * copyMenuButton = [[MenuButton alloc] init];
     copyMenuButton.iconName = @"copy";
     copyMenuButton.tag = MenuTypeCopy;
-    copyMenuButton.title = NSLocalizedString(@"Copy", nil) ;
+    copyMenuButton.title = NSLocalizedString(@"Copy", nil);
     
     MenuButton * refreshMenuButton = [[MenuButton alloc] init];
     refreshMenuButton.iconName = @"refresh";
     refreshMenuButton.tag = MenuTypeRefresh;
-    refreshMenuButton.title = NSLocalizedString(@"Refresh", nil) ;
+    refreshMenuButton.title = NSLocalizedString(@"Refresh", nil);
+    
+    MenuButton * shareMenuButton = [[MenuButton alloc] init];
+    shareMenuButton.iconName = @"share";
+    shareMenuButton.tag = MenuTypeShare;
+    shareMenuButton.title = NSLocalizedString(@"Share", nil);
+    
     
     [self.buttonArray addObject:copyMenuButton];
     [self.buttonArray addObject:refreshMenuButton];
+    [self.buttonArray addObject:shareMenuButton];
     
 }
 

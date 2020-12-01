@@ -1132,9 +1132,26 @@ BOOL isExiting = FALSE;
             {
                 UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
                 pasteboard.string = [self.webView.URL absoluteString];
-//                [self ShowAlert:NSLocalizedString(@"Copy successfully", nil)];
                 UIView * toast = [self viewForMessage:@"Copy successfully"];
                 [self showToast:toast duration:0.2 position:@"bottom" addedPixelsY:0];
+                break;
+            }
+        case MenuTypeShare:
+            {
+                if(!self.webView.isLoading) {
+                    NSString *textToShare = self.webView.title;
+                    UIImage *imageToShare = self.faviconImage;
+                    NSURL *urlToShare = [NSURL URLWithString:[self.webView.URL absoluteString]];
+                    NSArray *activityItems = @[];
+                    if(nil == imageToShare) {
+                        activityItems = @[urlToShare, textToShare];
+                    }
+                    else {
+                        activityItems = @[urlToShare, textToShare, imageToShare];
+                    }
+                    UIActivityViewController* activityViewController =[[UIActivityViewController alloc] initWithActivityItems:activityItems applicationActivities:nil];
+                    [self presentViewController:activityViewController animated:YES completion:^{}];
+                }
                 break;
             }
         default:
