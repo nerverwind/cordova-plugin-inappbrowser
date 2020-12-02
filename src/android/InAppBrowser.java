@@ -780,9 +780,50 @@ public class InAppBrowser extends CordovaPlugin {
         refreshButtonView.addView(refreshButton);
         refreshButtonView.addView(refreshButtonTitleView);
 
+        LinearLayout shareButtonView = new LinearLayout(buttonListView.getContext());
+        LinearLayout.LayoutParams shareButtonViewLayout = new LinearLayout.LayoutParams(this.dpToPixels(80), this.dpToPixels(100));
+        shareButtonViewLayout.setMargins(this.dpToPixels(160), 0, 0,0);
+        shareButtonView.setLayoutParams(shareButtonViewLayout);
+        shareButtonView.setOrientation(LinearLayout.VERTICAL);
+        shareButtonView.setGravity(Gravity.CENTER);
+
+
+
+        ImageButton shareButton = new ImageButton(shareButtonView.getContext());
+        shareButton.setLayoutParams(new LinearLayout.LayoutParams(this.dpToPixels(50), this.dpToPixels(50)));
+
+        int shareResId = activityRes.getIdentifier("ic_action_share", "drawable", cordova.getActivity().getPackageName());
+        Drawable shareIcon = activityRes.getDrawable(shareResId);
+        shareButton.setImageDrawable(shareIcon);
+        shareButton.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        shareButton.setBackground(buttonGd);
+
+        shareButton.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View v) {
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, inAppWebView.getUrl());
+                cordova.getActivity().startActivity(Intent.createChooser(shareIntent, "Share DAPP"));
+            }
+        });
+
+
+        TextView shareButtonTitleView = new TextView(shareButtonView.getContext());
+        shareButtonTitleView.setLayoutParams(new LinearLayout.LayoutParams(this.dpToPixels(80), this.dpToPixels(20)));
+        shareButtonTitleView.setText("Share");
+        shareButtonTitleView.setTextColor(Color.parseColor("#333333"));
+        shareButtonTitleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+        shareButtonTitleView.setGravity(Gravity.CENTER);
+        shareButtonTitleView.setSingleLine();
+        shareButtonTitleView.setEllipsize(TextUtils.TruncateAt.END);
+
+        shareButtonView.addView(shareButton);
+        shareButtonView.addView(shareButtonTitleView);
+
         buttonListView.addView(copyButtonView);
         buttonListView.addView(refreshButtonView);
-
+        buttonListView.addView(shareButtonView);
 
 
         dialogView.addView(buttonListView);
